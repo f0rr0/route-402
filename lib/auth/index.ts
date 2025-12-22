@@ -2,9 +2,10 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { db } from "@/lib/db";
+import { env } from "@/lib/env";
 
-const betterAuthUrl = process.env.BETTER_AUTH_URL;
-const betterAuthSecret = process.env.BETTER_AUTH_SECRET;
+const betterAuthUrl = env.BETTER_AUTH_URL;
+const betterAuthSecret = env.BETTER_AUTH_SECRET;
 
 if (!betterAuthUrl) {
   throw new Error("BETTER_AUTH_URL is not set");
