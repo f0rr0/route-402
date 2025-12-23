@@ -47,13 +47,13 @@ export default async function FacilitatorsPage({
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-10">
       <header className="flex flex-col gap-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           Project
         </p>
-        <h1 className="text-2xl font-semibold text-zinc-900">
+        <h1 className="text-2xl font-semibold text-foreground">
           Facilitator connections
         </h1>
-        <p className="text-sm text-zinc-600">
+        <p className="text-sm text-muted-foreground">
           Add provider credentials and validate supported capabilities.
         </p>
       </header>
@@ -67,11 +67,11 @@ export default async function FacilitatorsPage({
         </CardHeader>
         <CardContent>
           {connections.length === 0 ? (
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-muted-foreground">
               No facilitator connections yet.
             </p>
           ) : (
-            <div className="divide-y divide-zinc-100">
+            <div className="divide-y divide-border">
               {connections.map((connection) => (
                 <div
                   key={connection.id}
@@ -79,17 +79,17 @@ export default async function FacilitatorsPage({
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-3">
-                      <p className="text-sm font-semibold text-zinc-900">
+                      <p className="text-sm font-semibold text-foreground">
                         {connection.name}
                       </p>
                       <Badge variant={statusVariant(connection.status)}>
                         {connection.status ?? "unknown"}
                       </Badge>
                     </div>
-                    <p className="text-xs uppercase tracking-[0.15em] text-zinc-500">
+                    <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground">
                       {connection.provider}
                     </p>
-                    <p className="text-xs text-zinc-500">
+                    <p className="text-xs text-muted-foreground">
                       {connection.lastCheckedAt
                         ? `Last checked ${connection.lastCheckedAt.toLocaleString()}`
                         : "Not checked yet"}
@@ -190,7 +190,7 @@ export default async function FacilitatorsPage({
                 />
               </div>
 
-              <label className="flex items-center gap-2 text-sm text-zinc-600">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
                 <input type="checkbox" name="enabled" defaultChecked />
                 Enable connection
               </label>
@@ -241,7 +241,7 @@ export default async function FacilitatorsPage({
                 />
               </div>
 
-              <label className="flex items-center gap-2 text-sm text-zinc-600">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
                 <input type="checkbox" name="enabled" defaultChecked />
                 Enable connection
               </label>
