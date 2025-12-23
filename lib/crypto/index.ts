@@ -16,12 +16,14 @@ export function deriveProjectKey(masterKeyBase64: string, projectId: string): Bu
   if (masterKey.length !== KEY_BYTES) {
     throw new Error("ROUTE402_MASTER_KEY must be 32 bytes base64");
   }
-  return hkdfSync(
-    "sha256",
-    masterKey,
-    Buffer.from(projectId, "utf8"),
-    Buffer.from("route402", "utf8"),
-    KEY_BYTES
+  return Buffer.from(
+    hkdfSync(
+      "sha256",
+      masterKey,
+      Buffer.from(projectId, "utf8"),
+      Buffer.from("route402", "utf8"),
+      KEY_BYTES
+    )
   );
 }
 

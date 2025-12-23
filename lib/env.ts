@@ -5,12 +5,12 @@ export const env = createEnv({
   server: {
     DATABASE_URL: z.url(),
     DRIZZLE_DATABASE_URL: z.url(),
-    BETTER_AUTH_SECRET: z.string().min(32).optional(),
-    BETTER_AUTH_URL: z.url().optional(),
-    ROUTE402_MASTER_KEY: z.string().optional(),
-    UPSTASH_REDIS_REST_URL: z.url().optional(),
-    UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
-    TRIGGER_API_KEY: z.string().optional(),
+    BETTER_AUTH_SECRET: z.string().min(32),
+    BETTER_AUTH_URL: z.url(),
+    ROUTE402_MASTER_KEY: z.string(),
+    UPSTASH_REDIS_REST_URL: z.url(),
+    UPSTASH_REDIS_REST_TOKEN: z.string(),
+    TRIGGER_API_KEY: z.string(),
   },
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,

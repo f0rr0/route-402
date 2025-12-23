@@ -32,16 +32,17 @@ const statusVariant = (status: string | null) => {
 export default async function FacilitatorsPage({
   params,
 }: {
-  params: { projectId: string };
+  params: Promise<{ projectId: string }>;
 }) {
+  const { projectId } = await params;
   const requestHeaders = await headers();
   await authorize({
     headers: requestHeaders,
-    projectId: params.projectId,
+    projectId,
     minRole: "viewer",
   });
 
-  const connections = await listConnections(params.projectId);
+  const connections = await listConnections(projectId);
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-10">
@@ -99,7 +100,7 @@ export default async function FacilitatorsPage({
                       <input
                         type="hidden"
                         name="projectId"
-                        value={params.projectId}
+                        value={projectId}
                       />
                       <input
                         type="hidden"
@@ -114,7 +115,7 @@ export default async function FacilitatorsPage({
                       <input
                         type="hidden"
                         name="projectId"
-                        value={params.projectId}
+                        value={projectId}
                       />
                       <input
                         type="hidden"
@@ -152,7 +153,7 @@ export default async function FacilitatorsPage({
           </CardHeader>
           <CardContent>
             <form action={createConnectionAction} className="space-y-4">
-              <input type="hidden" name="projectId" value={params.projectId} />
+              <input type="hidden" name="projectId" value={projectId} />
               <input type="hidden" name="provider" value="cdp" />
 
               <div className="space-y-2">
@@ -208,7 +209,7 @@ export default async function FacilitatorsPage({
           </CardHeader>
           <CardContent>
             <form action={createConnectionAction} className="space-y-4">
-              <input type="hidden" name="projectId" value={params.projectId} />
+              <input type="hidden" name="projectId" value={projectId} />
               <input type="hidden" name="provider" value="thirdweb" />
 
               <div className="space-y-2">

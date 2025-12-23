@@ -1,4 +1,4 @@
-import { pgEnum, pgTable, text, timestamp, boolean, jsonb, uuid, integer, primaryKey, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgEnum, pgTable, text, timestamp, boolean, jsonb, uuid, integer, primaryKey, uniqueIndex, index } from "drizzle-orm/pg-core";
 
 export const orgRoleEnum = pgEnum("org_role", ["owner", "admin", "viewer"]);
 export const facilitatorProviderEnum = pgEnum("facilitator_provider", ["cdp", "thirdweb"]);
@@ -8,10 +8,87 @@ export const settlementStatusEnum = pgEnum("settlement_status", ["pending", "unk
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
-  email: text("email").notNull(),
-  name: text("name"),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: boolean("email_verified").notNull().default(false),
+  image: text("image"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .$onUpdate(() => new Date())
+    .defaultNow()
+    .notNull(),
 });
+
+export const session = pgTable(
+  "session",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    token: text("token").notNull().unique(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .$onUpdate(() => new Date())
+      .defaultNow()
+      .notNull(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+  },
+  (table) => ({
+    userIdIdx: index("session_userId_idx").on(table.userId),
+  })
+);
+
+export const account = pgTable(
+  "account",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at", {
+      withTimezone: true,
+    }),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at", {
+      withTimezone: true,
+    }),
+    scope: text("scope"),
+    password: text("password"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .$onUpdate(() => new Date())
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    userIdIdx: index("account_userId_idx").on(table.userId),
+  })
+);
+
+export const verification = pgTable(
+  "verification",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    identifier: text("identifier").notNull(),
+    value: text("value").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .$onUpdate(() => new Date())
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    identifierIdx: index("verification_identifier_idx").on(table.identifier),
+  })
+);
 
 export const orgs = pgTable("orgs", {
   id: uuid("id").defaultRandom().primaryKey(),

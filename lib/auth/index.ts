@@ -19,6 +19,14 @@ export const auth = betterAuth({
   baseURL: betterAuthUrl,
   secret: betterAuthSecret,
   database: drizzleAdapter(db, { provider: "pg" }),
+  advanced: {
+    database: {
+      generateId: "uuid",
+    },
+  },
+  user: {
+    modelName: "users",
+  },
   emailAndPassword: {
     enabled: true,
   },
@@ -26,4 +34,4 @@ export const auth = betterAuth({
 });
 
 export type AuthSession = typeof auth.$Infer.Session;
-export type AuthUser = typeof auth.$Infer.User;
+export type AuthUser = typeof auth.$Infer.Session.user;
