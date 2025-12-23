@@ -22,7 +22,7 @@ export default async function PostAuthPage() {
     .limit(1);
 
   if (projectMembership[0]?.projectId) {
-    redirect(`/projects/${projectMembership[0].projectId}/facilitators`);
+    redirect(`/projects/${projectMembership[0].projectId}`);
   }
 
   const orgMembership = await db
@@ -41,7 +41,7 @@ export default async function PostAuthPage() {
       .limit(1);
 
     if (project[0]?.projectId) {
-      redirect(`/projects/${project[0].projectId}/facilitators`);
+      redirect(`/projects/${project[0].projectId}`);
     }
   }
 

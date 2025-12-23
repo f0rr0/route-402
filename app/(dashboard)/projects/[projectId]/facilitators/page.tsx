@@ -1,11 +1,9 @@
-import { headers } from "next/headers";
 import {
   createConnectionAction,
   testConnectionAction,
   toggleConnectionAction,
 } from "./actions";
 import { listConnections } from "@/lib/facilitators/service";
-import { authorize } from "@/lib/rbac/authorize";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -35,21 +33,11 @@ export default async function FacilitatorsPage({
   params: Promise<{ projectId: string }>;
 }) {
   const { projectId } = await params;
-  const requestHeaders = await headers();
-  await authorize({
-    headers: requestHeaders,
-    projectId,
-    minRole: "viewer",
-  });
-
   const connections = await listConnections(projectId);
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-10">
+    <div className="flex w-full flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-          Project
-        </p>
         <h1 className="text-2xl font-semibold text-foreground">
           Facilitator connections
         </h1>
