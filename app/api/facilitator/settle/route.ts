@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { authenticateApiKey } from "@/lib/auth/api-keys";
 import { decryptCredentials } from "@/lib/crypto/credentials";
+import { encryptProjectPayload } from "@/lib/crypto/project-payload";
 import type { EncryptedPayload } from "@/lib/crypto";
 import { db } from "@/lib/db";
 import { routingDecisions, settlementState, facilitatorConnections } from "@/lib/db/schema";
@@ -12,6 +13,7 @@ import { evaluateRuleset } from "@/lib/routing/eval";
 import { loadActiveRuleset, loadEligibleConnections } from "@/lib/routing/selection";
 import type { SettleResNormalized } from "@/lib/types/x402";
 import { settleRequestSchema } from "@/lib/types/x402-schema";
+import { tasks } from "@trigger.dev/sdk";
 import { and, eq } from "drizzle-orm";
 
 export const runtime = "nodejs";
@@ -263,15 +265,30 @@ export async function POST(request: Request) {
       body
     );
   } catch (error) {
+    const requestEnc = encryptProjectPayload(apiKey.projectId, {
+      paymentPayload: body.paymentPayload,
+      paymentRequirements: body.paymentRequirements,
+    });
+
     await db
       .update(settlementState)
-      .set({ status: "unknown", updatedAt: new Date() })
+      .set({ status: "unknown", updatedAt: new Date(), requestEnc })
       .where(
         and(
           eq(settlementState.projectId, apiKey.projectId),
           eq(settlementState.fingerprint, fingerprint)
         )
       );
+
+    try {
+      await tasks.trigger("settlement-reconcile", {
+        projectId: apiKey.projectId,
+        fingerprint,
+        connectionId: selected.id,
+      });
+    } catch {
+      // Avoid blocking the response if Trigger.dev is unavailable.
+    }
 
     await logDecision({
       projectId: apiKey.projectId,
@@ -298,6 +315,7 @@ export async function POST(request: Request) {
     .set({
       status: safeResponse.success ? "settled" : "failed",
       updatedAt: new Date(),
+      requestEnc: null,
     })
     .where(
       and(

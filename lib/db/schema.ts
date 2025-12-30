@@ -191,6 +191,7 @@ export const settlementState = pgTable(
     fingerprint: text("fingerprint").notNull(),
     connectionId: uuid("connection_id").references(() => facilitatorConnections.id, { onDelete: "set null" }),
     status: settlementStatusEnum("status").notNull().default("pending"),
+    requestEnc: jsonb("request_enc"),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => ({

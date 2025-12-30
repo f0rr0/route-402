@@ -1,5 +1,6 @@
 import {
   createConnectionAction,
+  deleteConnectionAction,
   testConnectionAction,
   toggleConnectionAction,
 } from "./actions";
@@ -123,6 +124,23 @@ export default async function FacilitatorsPage({
                         {connection.enabled ? "Disable" : "Enable"}
                       </Button>
                     </form>
+                    {!connection.enabled ? (
+                      <form action={deleteConnectionAction}>
+                        <input
+                          type="hidden"
+                          name="projectId"
+                          value={projectId}
+                        />
+                        <input
+                          type="hidden"
+                          name="connectionId"
+                          value={connection.id}
+                        />
+                        <Button type="submit" variant="destructive" size="sm">
+                          Delete
+                        </Button>
+                      </form>
+                    ) : null}
                   </div>
                 </div>
               ))}

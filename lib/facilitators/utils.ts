@@ -63,28 +63,94 @@ export async function requestJson(
 
 export function normalizeSupportedResponse(raw: unknown): SupportedResponse {
   const record = asRecord(raw);
-  const schemesRaw = record.schemes;
-  if (!Array.isArray(schemesRaw)) {
-    throw new Error("Unexpected supported response");
+  const dataRecord = asRecord(record.data);
+  const resultRecord = asRecord(record.result);
+
+  const schemesCandidate =
+    record.schemes ??
+    record.supported ??
+    record.capabilities ??
+    record.extensions ??
+    dataRecord.schemes ??
+    dataRecord.supported ??
+    dataRecord.extensions ??
+    resultRecord.schemes ??
+    resultRecord.supported ??
+    resultRecord.extensions ??
+    (Array.isArray(raw) ? raw : undefined);
+
+  if (!schemesCandidate) {
+    const keys = Object.keys(record);
+    throw new Error(
+      `Unexpected supported response: missing schemes (keys: ${keys.join(", ")})`
+    );
   }
 
-  const schemes = schemesRaw.map((entry) => {
-    if (!entry || typeof entry !== "object") {
-      throw new Error("Invalid supported entry");
+  const toNetworks = (value: unknown) => {
+    if (Array.isArray(value)) {
+      return value.filter((entry) => typeof entry === "string");
     }
-    const scheme = (entry as UnknownRecord).scheme;
-    if (typeof scheme !== "string" || scheme.length === 0) {
+    if (typeof value === "string") {
+      return [value];
+    }
+    if (value && typeof value === "object") {
+      const valueRecord = value as UnknownRecord;
+      const nested = valueRecord.networks ?? valueRecord.network;
+      if (Array.isArray(nested)) {
+        return nested.filter((entry) => typeof entry === "string");
+      }
+      if (typeof nested === "string") {
+        return [nested];
+      }
+    }
+    return [];
+  };
+
+  const normalizeEntry = (entry: UnknownRecord, fallbackScheme?: string) => {
+    const schemeValue = entry.scheme ?? entry.name ?? fallbackScheme;
+    if (typeof schemeValue !== "string" || schemeValue.length === 0) {
       throw new Error("Invalid supported scheme");
     }
-    const networksRaw = (entry as UnknownRecord).networks;
-    const networks = Array.isArray(networksRaw)
-      ? networksRaw.filter((network) => typeof network === "string")
-      : typeof networksRaw === "string"
-        ? [networksRaw]
-        : [];
 
-    return { scheme, networks };
-  });
+    return { scheme: schemeValue, networks: toNetworks(entry) };
+  };
+
+  let schemes: SupportedResponse["schemes"];
+
+  if (Array.isArray(schemesCandidate)) {
+    schemes = schemesCandidate.map((entry) => {
+      if (!entry || typeof entry !== "object") {
+        if (typeof entry === "string") {
+          return { scheme: entry, networks: [] };
+        }
+        throw new Error("Invalid supported entry");
+      }
+      return normalizeEntry(entry as UnknownRecord);
+    });
+  } else if (schemesCandidate && typeof schemesCandidate === "object") {
+    const candidateRecord = schemesCandidate as UnknownRecord;
+    const nestedArray = candidateRecord.schemes ?? candidateRecord.supported;
+    if (Array.isArray(nestedArray)) {
+      schemes = nestedArray.map((entry) => {
+        if (!entry || typeof entry !== "object") {
+          if (typeof entry === "string") {
+            return { scheme: entry, networks: [] };
+          }
+          throw new Error("Invalid supported entry");
+        }
+        return normalizeEntry(entry as UnknownRecord);
+      });
+    } else {
+      schemes = Object.entries(candidateRecord).map(([scheme, value]) => {
+        if (value && typeof value === "object") {
+          return normalizeEntry(value as UnknownRecord, scheme);
+        }
+        return { scheme, networks: toNetworks(value) };
+      });
+    }
+  } else {
+    throw new Error("Unexpected supported response");
+  }
 
   return { schemes, rawProvider: raw };
 }

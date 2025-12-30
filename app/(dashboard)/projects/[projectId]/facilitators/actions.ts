@@ -3,13 +3,15 @@
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { authorize } from "@/lib/rbac/authorize";
+import { authorizeOrRedirect } from "@/lib/rbac/authorize";
 import {
   createConnection,
+  deleteConnection,
   setConnectionEnabled,
   testConnection,
 } from "@/lib/facilitators/service";
 import { facilitatorProviderSchema } from "@/lib/types/credentials";
+import { tasks } from "@trigger.dev/sdk";
 
 const baseSchema = z.object({
   projectId: z.uuid(),
@@ -37,7 +39,7 @@ export async function createConnectionAction(formData: FormData) {
   const enabled = getString(formData, "enabled") === "on";
 
   const requestHeaders = await headers();
-  await authorize({
+  await authorizeOrRedirect({
     headers: requestHeaders,
     projectId: input.projectId,
     minRole: "admin",
@@ -55,13 +57,24 @@ export async function createConnectionAction(formData: FormData) {
           baseUrl: getOptionalString(formData, "thirdwebBaseUrl"),
         };
 
-  await createConnection({
+  const connectionId = await createConnection({
     projectId: input.projectId,
     provider: input.provider,
     name: input.name,
     enabled,
     credentials,
   });
+
+  if (connectionId) {
+    try {
+      await tasks.trigger("capability-refresh", {
+        projectId: input.projectId,
+        connectionId,
+      });
+    } catch {
+      // Capability refresh is best-effort.
+    }
+  }
 
   revalidatePath(`/projects/${input.projectId}/facilitators`);
 }
@@ -80,7 +93,7 @@ export async function toggleConnectionAction(formData: FormData) {
     });
 
   const requestHeaders = await headers();
-  await authorize({
+  await authorizeOrRedirect({
     headers: requestHeaders,
     projectId: input.projectId,
     minRole: "admin",
@@ -107,7 +120,7 @@ export async function testConnectionAction(formData: FormData) {
     });
 
   const requestHeaders = await headers();
-  await authorize({
+  await authorizeOrRedirect({
     headers: requestHeaders,
     projectId: input.projectId,
     minRole: "admin",
@@ -121,6 +134,32 @@ export async function testConnectionAction(formData: FormData) {
   } catch (error) {
     console.error("Failed to test facilitator connection", error);
   }
+
+  revalidatePath(`/projects/${input.projectId}/facilitators`);
+}
+
+export async function deleteConnectionAction(formData: FormData) {
+  const input = z
+    .object({
+      projectId: z.string().uuid(),
+      connectionId: z.string().uuid(),
+    })
+    .parse({
+      projectId: getString(formData, "projectId"),
+      connectionId: getString(formData, "connectionId"),
+    });
+
+  const requestHeaders = await headers();
+  await authorizeOrRedirect({
+    headers: requestHeaders,
+    projectId: input.projectId,
+    minRole: "admin",
+  });
+
+  await deleteConnection({
+    projectId: input.projectId,
+    connectionId: input.connectionId,
+  });
 
   revalidatePath(`/projects/${input.projectId}/facilitators`);
 }

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { asc, eq } from "drizzle-orm";
@@ -43,19 +42,10 @@ export default async function PostAuthPage() {
     if (project[0]?.projectId) {
       redirect(`/projects/${project[0].projectId}`);
     }
+    redirect(`/onboarding?orgId=${orgMembership[0].orgId}`);
   }
 
-  return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
-      <h1 className="text-xl font-semibold text-foreground">
-        No project access yet
-      </h1>
-      <p className="text-sm text-muted-foreground">
-        Ask an org owner to add you to a project, then sign in again.
-      </p>
-      <Link href="/" className="text-sm font-semibold text-foreground underline">
-        Back to home
-      </Link>
-    </div>
-  );
+  redirect("/onboarding");
+
+  return null;
 }

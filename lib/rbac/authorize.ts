@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { and, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -107,4 +108,17 @@ export async function authorize(options: AuthorizeOptions): Promise<AuthzContext
     orgRole: role,
     userId,
   };
+}
+
+export async function authorizeOrRedirect(
+  options: AuthorizeOptions
+): Promise<AuthzContext> {
+  try {
+    return await authorize(options);
+  } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      redirect("/sign-in");
+    }
+    throw error;
+  }
 }

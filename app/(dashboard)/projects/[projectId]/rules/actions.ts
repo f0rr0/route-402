@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 import { z } from "zod";
 import { desc, eq } from "drizzle-orm";
-import { authorize } from "@/lib/rbac/authorize";
+import { authorizeOrRedirect } from "@/lib/rbac/authorize";
 import { db } from "@/lib/db";
 import { routingRulesets } from "@/lib/db/schema";
 import { buildRoutingContext } from "@/lib/routing/context";
@@ -88,7 +88,7 @@ export async function validateRulesetAction(
   }
 
   const requestHeaders = await headers();
-  await authorize({
+  await authorizeOrRedirect({
     headers: requestHeaders,
     projectId: parsed.data.projectId,
     minRole: "viewer",
@@ -123,7 +123,7 @@ export async function dryRunRulesetAction(
   }
 
   const requestHeaders = await headers();
-  await authorize({
+  await authorizeOrRedirect({
     headers: requestHeaders,
     projectId: parsed.data.projectId,
     minRole: "viewer",
@@ -164,7 +164,7 @@ export async function saveRulesetAction(
   }
 
   const requestHeaders = await headers();
-  const authz = await authorize({
+  const authz = await authorizeOrRedirect({
     headers: requestHeaders,
     projectId: parsed.data.projectId,
     minRole: "admin",

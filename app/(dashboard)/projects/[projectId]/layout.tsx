@@ -1,12 +1,16 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { headers } from "next/headers";
-import { eq } from "drizzle-orm";
+import type { SQL } from "drizzle-orm";
+import { eq, inArray, or } from "drizzle-orm";
 import ProjectNav from "@/components/dashboard/project-nav";
+import ProjectSwitcher from "@/components/dashboard/project-switcher";
 import { Badge } from "@/components/ui/badge";
-import { authorize } from "@/lib/rbac/authorize";
+import { buttonVariants } from "@/components/ui/button";
+import { authorizeOrRedirect } from "@/lib/rbac/authorize";
 import { db } from "@/lib/db";
-import { projects } from "@/lib/db/schema";
+import { orgMembers, orgs, projectMembers, projects } from "@/lib/db/schema";
+import { cn } from "@/lib/utils";
 
 export default async function ProjectLayout({
   children,
@@ -17,7 +21,7 @@ export default async function ProjectLayout({
 }) {
   const { projectId } = await params;
   const requestHeaders = await headers();
-  const authz = await authorize({
+  const authz = await authorizeOrRedirect({
     headers: requestHeaders,
     projectId,
     minRole: "viewer",
@@ -29,6 +33,69 @@ export default async function ProjectLayout({
     .where(eq(projects.id, projectId))
     .limit(1);
   const projectName = projectRows[0]?.name ?? "Project";
+
+  const orgMemberships = await db
+    .select({ orgId: orgMembers.orgId })
+    .from(orgMembers)
+    .where(eq(orgMembers.userId, authz.userId));
+
+  const projectMemberships = await db
+    .select({ projectId: projectMembers.projectId })
+    .from(projectMembers)
+    .where(eq(projectMembers.userId, authz.userId));
+
+  const orgIds = orgMemberships.map((row) => row.orgId);
+  const projectIds = projectMemberships.map((row) => row.projectId);
+  const projectConditions = [
+    orgIds.length ? inArray(projects.orgId, orgIds) : null,
+    projectIds.length ? inArray(projects.id, projectIds) : null,
+  ].filter((condition): condition is SQL<unknown> => Boolean(condition));
+
+  const projectWhere =
+    projectConditions.length > 1
+      ? or(...projectConditions)
+      : projectConditions[0];
+
+  const availableProjects = projectWhere
+    ? await db
+        .select({ id: projects.id, name: projects.name, orgId: projects.orgId })
+        .from(projects)
+        .where(projectWhere)
+    : [];
+
+  const allOrgIds = Array.from(
+    new Set([...orgIds, ...availableProjects.map((project) => project.orgId)])
+  );
+
+  const orgRows = allOrgIds.length
+    ? await db
+        .select({ id: orgs.id, name: orgs.name })
+        .from(orgs)
+        .where(inArray(orgs.id, allOrgIds))
+    : [];
+
+  const orgOptions = orgRows.map((org) => ({
+    id: org.id,
+    name: org.name,
+    projects: [] as Array<{ id: string; name: string }>,
+  }));
+
+  const orgMap = new Map(orgOptions.map((org) => [org.id, org]));
+
+  for (const project of availableProjects) {
+    const org = orgMap.get(project.orgId);
+    if (org) {
+      org.projects.push({ id: project.id, name: project.name });
+    }
+  }
+
+  for (const org of orgOptions) {
+    org.projects.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  const filteredOrgOptions = orgOptions.filter((org) => org.projects.length > 0);
+
+  filteredOrgOptions.sort((a, b) => a.name.localeCompare(b.name));
 
   const navItems = [
     { href: `/projects/${projectId}`, label: "Overview", exact: true },
@@ -75,6 +142,24 @@ export default async function ProjectLayout({
               <Badge variant="default" className="uppercase">
                 {authz.orgRole}
               </Badge>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-border/60 bg-white/80 p-4">
+            <ProjectSwitcher
+              orgs={filteredOrgOptions}
+              currentProjectId={projectId}
+            />
+            <div className="mt-4">
+              <Link
+                href={`/org/${authz.orgId}`}
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "sm" }),
+                  "w-full justify-start"
+                )}
+              >
+                Org settings
+              </Link>
             </div>
           </div>
 

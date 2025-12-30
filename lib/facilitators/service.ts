@@ -12,7 +12,7 @@ import {
   type FacilitatorProvider,
 } from "@/lib/types/credentials";
 import { getAdapter } from "@/lib/facilitators";
-import { NotFoundError } from "@/lib/rbac/errors";
+import { BadRequestError, NotFoundError } from "@/lib/rbac/errors";
 
 export type FacilitatorConnectionSummary = {
   id: string;
@@ -190,4 +190,44 @@ export async function testConnection(params: {
 
     throw error;
   }
+}
+
+export async function deleteConnection(params: {
+  projectId: string;
+  connectionId: string;
+}) {
+  const rows = await db
+    .select({
+      id: facilitatorConnections.id,
+      enabled: facilitatorConnections.enabled,
+    })
+    .from(facilitatorConnections)
+    .where(
+      and(
+        eq(facilitatorConnections.id, params.connectionId),
+        eq(facilitatorConnections.projectId, params.projectId)
+      )
+    )
+    .limit(1);
+
+  const connection = rows[0];
+  if (!connection) {
+    throw new NotFoundError("Connection not found");
+  }
+
+  if (connection.enabled) {
+    throw new BadRequestError("Disable the connection before deleting");
+  }
+
+  const deleted = await db
+    .delete(facilitatorConnections)
+    .where(
+      and(
+        eq(facilitatorConnections.id, params.connectionId),
+        eq(facilitatorConnections.projectId, params.projectId)
+      )
+    )
+    .returning({ id: facilitatorConnections.id });
+
+  return deleted[0] ?? null;
 }
