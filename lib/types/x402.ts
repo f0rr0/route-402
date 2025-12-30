@@ -4,6 +4,7 @@ export type PaymentRequirements = {
   asset?: string;
   amount?: string;
   payTo?: string;
+  extra?: Record<string, unknown>;
 };
 
 export type VerifyReq = {

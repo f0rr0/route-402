@@ -52,10 +52,14 @@ export async function createConnectionAction(formData: FormData) {
           apiSecret: getString(formData, "cdpApiSecret"),
           baseUrl: getOptionalString(formData, "cdpBaseUrl"),
         }
-      : {
-          walletSecret: getString(formData, "thirdwebWalletSecret"),
-          baseUrl: getOptionalString(formData, "thirdwebBaseUrl"),
-        };
+      : input.provider === "thirdweb"
+        ? {
+            walletSecret: getString(formData, "thirdwebWalletSecret"),
+            baseUrl: getOptionalString(formData, "thirdwebBaseUrl"),
+          }
+        : {
+            baseUrl: getOptionalString(formData, "mogamiBaseUrl"),
+          };
 
   const connectionId = await createConnection({
     projectId: input.projectId,
@@ -82,8 +86,8 @@ export async function createConnectionAction(formData: FormData) {
 export async function toggleConnectionAction(formData: FormData) {
   const input = z
     .object({
-      projectId: z.string().uuid(),
-      connectionId: z.string().uuid(),
+      projectId: z.uuid(),
+      connectionId: z.uuid(),
       enabled: z.enum(["true", "false"]),
     })
     .parse({

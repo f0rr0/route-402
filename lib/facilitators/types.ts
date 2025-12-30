@@ -1,9 +1,10 @@
 import type { SettleReq, SettleResNormalized, VerifyReq, VerifyResNormalized } from "@/lib/types/x402";
+import type { FacilitatorProvider } from "@/lib/types/credentials";
 
 export type AdapterCtx = {
   projectId: string;
   connectionId: string;
-  provider: "cdp" | "thirdweb";
+  provider: FacilitatorProvider;
   credentials: Record<string, unknown>;
 };
 
@@ -13,7 +14,7 @@ export type SupportedResponse = {
 };
 
 export interface FacilitatorAdapter {
-  provider: "cdp" | "thirdweb";
+  provider: FacilitatorProvider;
   supported(ctx: AdapterCtx): Promise<SupportedResponse>;
   verify(ctx: AdapterCtx, req: VerifyReq): Promise<VerifyResNormalized>;
   settle(ctx: AdapterCtx, req: SettleReq): Promise<SettleResNormalized>;

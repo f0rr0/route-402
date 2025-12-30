@@ -1,7 +1,7 @@
 import { pgEnum, pgTable, text, timestamp, boolean, jsonb, uuid, integer, primaryKey, uniqueIndex, index } from "drizzle-orm/pg-core";
 
 export const orgRoleEnum = pgEnum("org_role", ["owner", "admin", "viewer"]);
-export const facilitatorProviderEnum = pgEnum("facilitator_provider", ["cdp", "thirdweb"]);
+export const facilitatorProviderEnum = pgEnum("facilitator_provider", ["cdp", "thirdweb", "mogami"]);
 export const facilitatorStatusEnum = pgEnum("facilitator_status", ["unknown", "ok", "error"]);
 export const routingEndpointEnum = pgEnum("routing_endpoint", ["verify", "settle"]);
 export const settlementStatusEnum = pgEnum("settlement_status", ["pending", "unknown", "settled", "failed"]);

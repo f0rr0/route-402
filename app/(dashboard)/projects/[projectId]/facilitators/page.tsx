@@ -149,7 +149,7 @@ export default async function FacilitatorsPage({
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle>Add Coinbase CDP</CardTitle>
@@ -253,6 +253,47 @@ export default async function FacilitatorsPage({
               </label>
 
               <Button type="submit">Save thirdweb connection</Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Add Mogami (public)</CardTitle>
+            <CardDescription>
+              Hosted facilitator with no credentials (Base Sepolia only).
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form action={createConnectionAction} className="space-y-4">
+              <input type="hidden" name="projectId" value={projectId} />
+              <input type="hidden" name="provider" value="mogami" />
+
+              <div className="space-y-2">
+                <Label htmlFor="mogami-name">Name</Label>
+                <Input
+                  id="mogami-name"
+                  name="name"
+                  placeholder="mogami-sepolia"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="mogami-base-url">Base URL (optional)</Label>
+                <Input
+                  id="mogami-base-url"
+                  name="mogamiBaseUrl"
+                  placeholder="https://v1.facilitator.mogami.tech"
+                />
+              </div>
+
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                <input type="checkbox" name="enabled" defaultChecked />
+                Enable connection
+              </label>
+
+              <Button type="submit">Save Mogami connection</Button>
             </form>
           </CardContent>
         </Card>

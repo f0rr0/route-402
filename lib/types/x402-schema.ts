@@ -1,12 +1,15 @@
 import { z } from "zod";
 
-export const paymentRequirementsSchema = z.object({
-  scheme: z.string().min(1),
-  network: z.string().optional(),
-  asset: z.string().optional(),
-  amount: z.string().optional(),
-  payTo: z.string().optional(),
-});
+export const paymentRequirementsSchema = z
+  .object({
+    scheme: z.string().min(1),
+    network: z.string().optional(),
+    asset: z.string().optional(),
+    amount: z.string().optional(),
+    payTo: z.string().optional(),
+    extra: z.record(z.string(), z.unknown()).optional(),
+  })
+  .loose();
 
 export const verifyRequestSchema = z.object({
   paymentRequirements: paymentRequirementsSchema,

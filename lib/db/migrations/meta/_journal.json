@@ -29,6 +29,13 @@
       "when": 1766578823959,
       "tag": "0003_settlement_request_payload",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1767083609512,
+      "tag": "0004_add_mogami_provider",
+      "breakpoints": true
     }
   ]
 }

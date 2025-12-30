@@ -71,12 +71,15 @@ export function normalizeSupportedResponse(raw: unknown): SupportedResponse {
     record.supported ??
     record.capabilities ??
     record.extensions ??
+    record.kinds ??
     dataRecord.schemes ??
     dataRecord.supported ??
     dataRecord.extensions ??
+    dataRecord.kinds ??
     resultRecord.schemes ??
     resultRecord.supported ??
     resultRecord.extensions ??
+    resultRecord.kinds ??
     (Array.isArray(raw) ? raw : undefined);
 
   if (!schemesCandidate) {
